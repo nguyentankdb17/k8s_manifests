@@ -39,3 +39,16 @@
         create_namespace: false
         update_repo_cache: true
         state: present
+
+    - name: Wait until Prometheus pods are Running
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Pod
+        namespace: monitoring
+        label_selectors:
+          - "app=prometheus"
+      register: prometheus_pods
+      until: >
+        prometheus_pods.resources | selectattr('status.phase', 'equalto', 'Running') | list | length > 0
+      retries: 20
+      delay: 15
